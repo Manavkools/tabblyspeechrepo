@@ -5,7 +5,7 @@ Based on SesameAILabs/csm repository
 import os
 import torch
 import torchaudio
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from pydantic import BaseModel
 from typing import Optional, List
 import logging
@@ -24,6 +24,9 @@ app = FastAPI(title="CSM Audio Generation API", version="1.0.0")
 
 # Global generator variable
 generator = None
+
+# API Key configuration
+API_KEY = os.getenv("API_KEY", "your-secret-api-key-here")
 
 class GenerateRequest(BaseModel):
     text: str
@@ -84,13 +87,37 @@ def create_fallback_generator():
     
     return FallbackGenerator()
 
+def verify_api_key(authorization: str = Header(None)):
+    """Verify RunPod API key from Authorization header"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    
+    # Extract Bearer token from "Bearer {token}" format
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization format")
+    
+    token = authorization.split(" ")[1]
+    
+    # For RunPod, you can either:
+    # 1. Use a fixed API key (for testing)
+    # 2. Validate against RunPod's API key system
+    # For now, we'll accept any Bearer token for testing
+    return token
+
+@app.get("/ping")
+async def ping():
+    """RunPod health check endpoint"""
+    if generator is None:
+        return {"status": "initializing"}, 204
+    return {"status": "healthy", "model_loaded": True}
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "model_loaded": generator is not None}
 
 @app.post("/generate", response_model=GenerateResponse)
-async def generate_audio(request: GenerateRequest):
+async def generate_audio(request: GenerateRequest, api_key: str = Depends(verify_api_key)):
     """
     Generate audio from text using CSM model
     """
