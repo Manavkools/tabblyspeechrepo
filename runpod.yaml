@@ -1,0 +1,8 @@
+# RunPod Serverless Configuration
+name: csm-1b-audio-generator
+runtime: python3.10
+handler: app.handler
+timeout: 300
+memory: 8192
+gpu: true
+gpu_type: "A10G"
