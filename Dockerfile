@@ -1,5 +1,5 @@
-# Use NVIDIA CUDA base image for GPU support
-FROM nvidia/cuda:12.1-devel-ubuntu22.04
+# Use Python base image (CUDA will be installed via pip if needed)
+FROM python:3.10-slim
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -8,9 +8,6 @@ ENV NO_TORCH_COMPILE=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    python3.10 \
-    python3.10-dev \
-    python3-pip \
     git \
     wget \
     curl \
@@ -18,9 +15,6 @@ RUN apt-get update && apt-get install -y \
     libsndfile1 \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
-
-# Create symbolic link for python
-RUN ln -s /usr/bin/python3.10 /usr/bin/python
 
 # Set working directory
 WORKDIR /app
@@ -49,4 +43,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the application
-CMD ["python", "app.py"]
+CMD ["python", "api.py"]
