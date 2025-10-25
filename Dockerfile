@@ -20,13 +20,10 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY requirements.minimal.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Install triton for Windows compatibility (if needed)
-RUN pip install triton-windows || pip install triton
+RUN pip install --no-cache-dir -r requirements.minimal.txt
 
 # Copy application code
 COPY . .
